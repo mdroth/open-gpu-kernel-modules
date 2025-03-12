@@ -67,7 +67,7 @@ int libspdm_aead_prealloc(void **context, char const *alg)
         return -ENOMEM;
     }
 
-    ctx->a_data_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL);
+    ctx->a_data_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL | __GFP_ZERO);
     if (ctx->a_data_buffer == NULL) {
         aead_request_free(ctx->req);
         crypto_free_aead(ctx->aead);
@@ -75,7 +75,7 @@ int libspdm_aead_prealloc(void **context, char const *alg)
         return -ENOMEM;
     }
 
-    ctx->in_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL);
+    ctx->in_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL | __GFP_ZERO);
     if (ctx->in_buffer == NULL) {
         kfree(ctx->a_data_buffer);
         aead_request_free(ctx->req);
@@ -84,7 +84,7 @@ int libspdm_aead_prealloc(void **context, char const *alg)
         return -ENOMEM;
     }
 
-    ctx->out_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL);
+    ctx->out_buffer = kmalloc(BUFFER_SIZE, GFP_KERNEL | __GFP_ZERO);
     if (ctx->out_buffer == NULL) {
         kfree(ctx->a_data_buffer);
         kfree(ctx->in_buffer);
@@ -94,6 +94,8 @@ int libspdm_aead_prealloc(void **context, char const *alg)
         return -ENOMEM;
     }
 
+    pr_info("%s: marker 0, ctx->a_data_buffer %px ctx->in_buffer %px ctx->out_buffer %px",
+            __func__, ctx->a_data_buffer, ctx->in_buffer, ctx->out_buffer);
     *context = ctx;
     return 0;
 #endif
@@ -150,6 +152,11 @@ static int lkca_aead_internal(struct crypto_aead *aead,
     aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG |
             CRYPTO_TFM_REQ_MAY_SLEEP, crypto_req_done, &wait);
 
+    pr_info("%s: marker 0, sg_in[0] %llx (%ld) sg_in[1] %llx (%ld) sg_in[2] %llx (%ld) data_in_size %ld tag_size %ld enc %d",
+            __func__, sg_in[0].dma_address, sg_in[0].length,
+            sg_in[1].dma_address, sg_in[1].length,
+            sg_in[2].dma_address, sg_in[2].length,
+            data_in_size, tag_size, enc);
     if (enc) {
         aead_request_set_crypt(req, sg_in, sg_out, data_in_size, (u8 *) iv);
         rc = crypto_wait_req(crypto_aead_encrypt(req), &wait);
@@ -165,6 +172,7 @@ static int lkca_aead_internal(struct crypto_aead *aead,
             pr_info("aead.c: Decryption failed with error %i\n", rc);
             if (rc == -EBADMSG) {
                 pr_info("aead.c: Authentication tag mismatch!\n");
+                dump_stack();
             }
         }
     }
@@ -237,6 +245,18 @@ int libspdm_aead_prealloced(void *context,
 
     if(!enc)
         memcpy(ctx->tag, tag, tag_size);
+
+    pr_info("%s: marker 0, sg_in[SG_AEAD_AAD] %llx (%ld) sg_in[SG_AEAD_TEXT] %llx (%ld) sg_in[SG_AEAD_SIG/tag] %llx (%ld) tag_size %ld",
+            __func__, sg_in[SG_AEAD_AAD].dma_address, sg_in[SG_AEAD_AAD].length,
+            sg_in[SG_AEAD_TEXT].dma_address, sg_in[SG_AEAD_TEXT].length,
+            sg_in[SG_AEAD_SIG].dma_address, sg_in[SG_AEAD_SIG].length,
+            tag_size);
+
+    pr_info("%s: marker 1, sg_out[SG_AEAD_AAD] %llx (%ld) sg_out[SG_AEAD_TEXT] %llx (%ld) sg_out[SG_AEAD_SIG/tag] %llx (%ld) tag_size %ld",
+            __func__, sg_out[SG_AEAD_AAD].dma_address, sg_out[SG_AEAD_AAD].length,
+            sg_out[SG_AEAD_TEXT].dma_address, sg_out[SG_AEAD_TEXT].length,
+            sg_out[SG_AEAD_SIG].dma_address, sg_out[SG_AEAD_SIG].length,
+            tag_size);
 
     rc = lkca_aead_internal(ctx->aead, ctx->req, key, key_size, iv, iv_size,
                             sg_in, sg_out, a_data_size, data_in_size,

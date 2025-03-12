@@ -718,7 +718,7 @@ static NV_STATUS mem_map_cpu_to_sysmem_kernel(uvm_mem_t *mem)
     // of all the pages to map so that vmap() can be used.
     if (mem->chunk_size != PAGE_SIZE) {
         size_t page_index;
-        pages = uvm_kvmalloc(sizeof(*pages) * num_pages);
+        pages = uvm_kvmalloc_zero(sizeof(*pages) * num_pages);
         if (!pages)
             return NV_ERR_NO_MEMORY;
         for (page_index = 0; page_index < num_pages; ++page_index)
@@ -751,7 +751,7 @@ static NV_STATUS mem_map_cpu_to_vidmem_kernel(uvm_mem_t *mem)
 
     UVM_ASSERT(uvm_mem_is_vidmem(mem));
 
-    pages = uvm_kvmalloc(sizeof(*pages) * num_pages);
+    pages = uvm_kvmalloc_zero(sizeof(*pages) * num_pages);
     if (!pages)
         return NV_ERR_NO_MEMORY;
 

@@ -132,6 +132,9 @@ static NV_STATUS dma_buffer_create(uvm_conf_computing_dma_buffer_pool_t *dma_buf
 
     *dma_buffer_out = dma_buffer;
 
+    pr_info("%s: marker 0, dma_buffer->alloc %px dma_buffer->auth_tag %px",
+            __func__, dma_buffer->alloc, dma_buffer->auth_tag);
+
     return status;
 
 err:
@@ -832,6 +835,8 @@ NV_STATUS uvm_conf_computing_util_memcopy_cpu_to_gpu(uvm_gpu_t *gpu,
     UVM_ASSERT(g_uvm_global.conf_computing_enabled);
     UVM_ASSERT(size <= UVM_CONF_COMPUTING_DMA_BUFFER_SIZE);
 
+    pr_info("%s: marker 0", __func__);
+
     status = uvm_conf_computing_dma_buffer_alloc(&gpu->conf_computing.dma_buffer_pool, &dma_buffer, NULL);
     if (status != NV_OK)
         return status;
@@ -876,6 +881,8 @@ NV_STATUS uvm_conf_computing_util_memcopy_gpu_to_cpu(uvm_gpu_t *gpu,
 
     UVM_ASSERT(g_uvm_global.conf_computing_enabled);
     UVM_ASSERT(size <= UVM_CONF_COMPUTING_DMA_BUFFER_SIZE);
+
+    pr_info("%s: marker 0", __func__);
 
     status = uvm_conf_computing_dma_buffer_alloc(&gpu->conf_computing.dma_buffer_pool, &dma_buffer, NULL);
     if (status != NV_OK)
