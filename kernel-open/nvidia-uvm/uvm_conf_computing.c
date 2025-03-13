@@ -711,7 +711,9 @@ void uvm_conf_computing_disable_key_rotation(uvm_gpu_t *gpu)
 
 bool uvm_conf_computing_is_key_rotation_enabled(uvm_gpu_t *gpu)
 {
-    return gpu->channel_manager->conf_computing.key_rotation_enabled;
+    UVM_ASSERT(gpu);
+
+    return gpu->channel_manager && gpu->channel_manager->conf_computing.key_rotation_enabled;
 }
 
 bool uvm_conf_computing_is_key_rotation_enabled_in_pool(uvm_channel_pool_t *pool)
