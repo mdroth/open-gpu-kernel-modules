@@ -2841,6 +2841,7 @@ static NV_STATUS channel_pool_add(uvm_channel_manager_t *channel_manager,
         pool->tsg_handles = uvm_kvmalloc_zero(sizeof(*pool->tsg_handles) * num_tsgs);
         if (!pool->tsg_handles) {
             status = NV_ERR_NO_MEMORY;
+            pr_info("%s: marker 0, error status %d", __func__, status);
             goto error;
         }
 
@@ -2848,8 +2849,10 @@ static NV_STATUS channel_pool_add(uvm_channel_manager_t *channel_manager,
             uvmGpuTsgHandle *tsg_handle = pool->tsg_handles + i;
 
             status = tsg_create(pool, tsg_handle);
-            if (status != NV_OK)
+            if (status != NV_OK) {
+                pr_info("%s: marker 1, error status %d", __func__, status);
                 goto error;
+            }
         }
     }
 
@@ -2858,12 +2861,15 @@ static NV_STATUS channel_pool_add(uvm_channel_manager_t *channel_manager,
     channel_pool_initialize_locks(pool, num_channels);
 
     status = channel_pool_alloc_conf_computing_buffers(pool, num_channels);
-    if (status != NV_OK)
+    if (status != NV_OK) {
+        pr_info("%s: marker 2, error status %d", __func__, status);
         goto error;
+    }
 
     pool->channels = uvm_kvmalloc_zero(sizeof(*pool->channels) * num_channels);
     if (!pool->channels) {
         status = NV_ERR_NO_MEMORY;
+        pr_info("%s: marker 3, error status %d", __func__, status);
         goto error;
     }
 
@@ -2871,12 +2877,16 @@ static NV_STATUS channel_pool_add(uvm_channel_manager_t *channel_manager,
         uvm_channel_t *channel = pool->channels + i;
 
         status = channel_create(pool, channel);
-        if (status != NV_OK)
+        if (status != NV_OK) {
+            pr_info("%s: marker 4, error status %d", __func__, status);
             goto error;
+        }
 
         status = channel_init(channel);
-        if (status != NV_OK)
+        if (status != NV_OK) {
+            pr_info("%s: marker 5, error status %d", __func__, status);
             goto error;
+        }
     }
 
     *pool_out = pool;
