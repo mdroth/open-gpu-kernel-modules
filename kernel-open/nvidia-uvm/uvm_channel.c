@@ -3821,17 +3821,17 @@ static NV_STATUS channel_manager_create_pools(uvm_channel_manager_t *manager)
 
     max_channel_pools = channel_manager_get_max_pools(manager);
 
-    pr_info("%s: marker 0", __func__);
+    pr_info("%s: gpu %d channel_manger %px marker 0", __func__, manager->gpu->id.val, manager);
     manager->channel_pools = uvm_kvmalloc_zero(sizeof(*manager->channel_pools) * max_channel_pools);
     if (!manager->channel_pools)
         return NV_ERR_NO_MEMORY;
 
-    pr_info("%s: marker 1", __func__);
+    pr_info("%s: gpu %d channel_manger %px marker 1", __func__, manager->gpu->id.val, manager);
     status = channel_manager_create_conf_computing_pools(manager, preferred_ce);
     if (status != NV_OK)
         return status;
 
-    pr_info("%s: marker 2", __func__);
+    pr_info("%s: gpu %d channel_manger %px marker 2", __func__, manager->gpu->id.val, manager);
     status = channel_manager_create_ce_pools(manager, preferred_ce);
     if (status != NV_OK)
         return status;
@@ -3842,15 +3842,15 @@ static NV_STATUS channel_manager_create_pools(uvm_channel_manager_t *manager)
         uvm_channel_pool_t *proxy_pool = NULL;
         uvm_channel_type_t channel_type = uvm_channel_proxy_channel_type();
 
+        pr_info("%s: gpu %d channel_manger %px marker 3", __func__, manager->gpu->id.val, manager);
         status = channel_pool_add(manager, UVM_CHANNEL_POOL_TYPE_CE_PROXY, preferred_ce[channel_type], &proxy_pool);
         if (status != NV_OK)
             return status;
 
-        pr_info("%s: marker 3", __func__);
         manager->pool_to_use.default_for_type[channel_type] = proxy_pool;
     }
 
-    pr_info("%s: marker 4", __func__);
+    pr_info("%s: gpu %d channel_manger %px marker 4", __func__, manager->gpu->id.val, manager);
     return NV_OK;
 }
 
@@ -3865,29 +3865,30 @@ NV_STATUS uvm_channel_manager_create(uvm_gpu_t *gpu, uvm_channel_manager_t **cha
 
     *channel_manager_out = channel_manager;
 
-    pr_info("%s: marker 0", __func__);
+    pr_info("%s: gpu %d marker 0", __func__, gpu->id.val);
     channel_manager->gpu = gpu;
     init_channel_manager_conf(channel_manager);
     status = uvm_pushbuffer_create(channel_manager, &channel_manager->pushbuffer);
     if (status != NV_OK)
         goto error;
 
-    pr_info("%s: marker 1", __func__);
+    pr_info("%s: gpu %d marker 1", __func__, gpu->id.val);
     status = manager_create_procfs_dirs(channel_manager);
     if (status != NV_OK)
         goto error;
 
     pr_info("%s: marker 2", __func__);
+    pr_info("%s: gpu %d marker 2", __func__, gpu->id.val);
     status = channel_manager_create_pools(channel_manager);
     if (status != NV_OK)
         goto error;
 
-    pr_info("%s: marker 3", __func__);
+    pr_info("%s: gpu %d marker 3", __func__, gpu->id.val);
     status = manager_create_procfs(channel_manager);
     if (status != NV_OK)
         goto error;
 
-    pr_info("%s: marker 4", __func__);
+    pr_info("%s: gpu %d marker 4", __func__, gpu->id.val);
     // Key rotation is enabled only after all the channels have been created:
     // RM does not support channel allocation on an engine if key rotation is
     // pending on that engine. This can become a problem during testing if
@@ -3898,7 +3899,7 @@ NV_STATUS uvm_channel_manager_create(uvm_gpu_t *gpu, uvm_channel_manager_t **cha
 
 error:
     *channel_manager_out = NULL;
-    pr_info("%s: failed to create channel pools, status %d", __func__, status);
+    pr_info("%s: gpu %d failed to create channel pools, status %d", __func__, gpu->id.val, status);
     uvm_channel_manager_destroy(channel_manager);
 
     return status;
