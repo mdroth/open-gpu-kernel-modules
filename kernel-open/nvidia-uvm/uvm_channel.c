@@ -2232,21 +2232,21 @@ static NV_STATUS alloc_conf_computing_buffers(uvm_channel_t *channel)
     UVM_ASSERT(uvm_channel_is_ce(channel));
 
     semaphore->conf_computing.ivs =
-        uvm_kvmalloc(sizeof(*semaphore->conf_computing.ivs) * channel->num_gpfifo_entries);
+        uvm_kvmalloc_zero(sizeof(*semaphore->conf_computing.ivs) * channel->num_gpfifo_entries);
 
     if (!semaphore->conf_computing.ivs)
         return NV_ERR_NO_MEMORY;
 
     if (uvm_channel_is_wlc(channel)) {
         channel->conf_computing.static_pb_protected_sysmem =
-            uvm_kvmalloc(UVM_ALIGN_UP(UVM_MAX_WLC_PUSH_SIZE, UVM_PAGE_SIZE_4K));
+            uvm_kvmalloc_zero(UVM_ALIGN_UP(UVM_MAX_WLC_PUSH_SIZE, UVM_PAGE_SIZE_4K));
 
         if (!channel->conf_computing.static_pb_protected_sysmem)
             return NV_ERR_NO_MEMORY;
     }
     else if (!uvm_channel_is_lcic(channel)) {
         channel->conf_computing.push_crypto_bundles =
-            uvm_kvmalloc(sizeof(*channel->conf_computing.push_crypto_bundles) * channel->num_gpfifo_entries);
+            uvm_kvmalloc_zero(sizeof(*channel->conf_computing.push_crypto_bundles) * channel->num_gpfifo_entries);
 
         if (!channel->conf_computing.push_crypto_bundles)
             return NV_ERR_NO_MEMORY;
